@@ -49,8 +49,29 @@ hop_length = 512
 oenv = librosa.onset.onset_strength(y=x, sr=sr, hop_length=hop_length)
 tempogram = librosa.feature.tempogram(onset_envelope=oenv, sr=sr, hop_length=hop_length)
 
+# Spectral centroid
+
+spec_centroid = librosa.feature.spectral_centroid(y=x, sr=sr)[0]
+
+# Spectral features
+
+spectral_bandwidth=librosa.feature.spectral_bandwidth(y=x, sr=sr)[0]
+spectral_contrast=librosa.feature.spectral_contrast(y=x, sr=sr)[0]
+spectral_flatness=librosa.feature.spectral_flatness(y=x)[0]
+spectral_rolloff=librosa.feature.spectral_rolloff(y=x, sr=sr)[0]
 
 features = describe_freq(freqs)
+features.append(energy(x))
+features.append(np.mean(rmse))
+features.append(zero_crossings)
+features.append(tempo)
+features.append(np.mean(mfcc))
+features.append(np.mean(tempogram))
+features.append(np.mean(spec_centroid))
+features.append(np.mean(spectral_bandwidth))
+features.append(np.mean(spectral_contrast))
+features.append(np.mean(spectral_flatness))
+features.append(np.mean(spectral_rolloff))
 print(features)
 
 
