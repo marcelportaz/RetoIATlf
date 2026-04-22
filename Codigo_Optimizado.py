@@ -30,7 +30,7 @@ def energy(x):
 # ==========================================
 # 2. CONFIGURACIÓN DE LA CARPETA
 # ==========================================
-ruta_carpeta = 'Audios/DS_LA_LAtrain/*.flac' 
+ruta_carpeta = 'Audios/DS_LA/DS_LA_LAtrain/*.flac' 
 archivos = glob.glob(ruta_carpeta)
 
 # Aquí guardaremos todos los diccionarios
