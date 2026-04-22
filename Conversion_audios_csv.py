@@ -30,7 +30,7 @@ def energy(x):
 # ==========================================
 # 2. CONFIGURACIÓN DE LA CARPETA
 # ==========================================
-ruta_carpeta = 'Audios/DS_LA_LAtrain/*.flac' 
+ruta_carpeta = 'Audios/DS_LA/DS_LA_LAtrain/*.flac' 
 archivos = glob.glob(ruta_carpeta)
 
 # Aquí guardaremos todos los diccionarios
@@ -69,7 +69,7 @@ for archivo in archivos:
         # --- Empaquetado para Pandas ---
         # Asignamos cada valor a un nombre de columna
         features_audio = {
-            'archivo': os.path.basename(archivo),
+            'file_name': os.path.basename(archivo),
             'freq_mean': stats_freq[0],
             'freq_std': stats_freq[1],
             'freq_maxv': stats_freq[2],
