@@ -5,7 +5,7 @@ import glob
 import os
 
 # Convertir etiquetas
-df = pd.read_csv('mis_features_audio.csv')
+df = pd.read_csv('./Datos/df_voices.csv')
 
 # Convertimos la columna Key
 df['label'] = df['Key'].map({
