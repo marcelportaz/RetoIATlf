@@ -105,7 +105,7 @@ for archivo in archivos:
 df_features = pd.DataFrame(datos_features)
 
 # Guardar en CSV para no repetir este proceso
-df_features.to_csv('mis_features_audio.csv', index=False)
+df_features.to_csv('./Datos/mis_features_audio.csv', index=False)
 
 print("\n¡Proceso terminado!")
 print(f"Se ha creado un DataFrame con {df_features.shape[0]} filas (audios) y {df_features.shape[1]} columnas (features).")
