@@ -69,7 +69,7 @@ for archivo in archivos:
         # --- Empaquetado para Pandas ---
         # Asignamos cada valor a un nombre de columna
         features_audio = {
-            'file_name': os.path.basename(archivo),
+            'file_name': os.path.splitext(os.path.basename(archivo))[0],
             'freq_mean': stats_freq[0],
             'freq_std': stats_freq[1],
             'freq_maxv': stats_freq[2],
