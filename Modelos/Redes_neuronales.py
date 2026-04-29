@@ -11,7 +11,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 # 1. Cargar y preparar datos
 print("--- CARGANDO Y PREPARANDO DATOS ---")
-df = pd.read_csv('mis_features_audio.csv')
+df = pd.read_csv('./Datos/df_voicesS.csv')
 
 # Crear variable objetivo (y)
 df['y'] = df['Key'].map({'bonafide': 0, 'spoof': 1})
