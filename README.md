@@ -111,3 +111,34 @@ ______________________
 
 -------------------------------------------------------------------------------------------------------------------------------------
 
+## 5. Audio Features Dictionary
+_____________________________
+
+This section provides a description of the metrics extracted from the audio files that are found in the CSV database (`mis_features_fusionadas.csv`).
+
+- **energy**: The total energy of the audio signal.
+- **rmse_mean**: Root Mean Square Energy. Measures the average energy of the audio frames.
+- **zero_crossings**: The rate of sign-changes along a signal (how often the audio signal crosses the x-axis).
+- **tempo**: Estimated tempo (beats per minute) of the audio.
+- **mfcc_mean**: Mel-Frequency Cepstral Coefficients (average). Represents the short-term power spectrum of a sound.
+- **tempogram_mean**: Average of the tempogram, which measures the local autocorrelation of the onset strength envelope.
+- **spec_centroid_mean**: Spectral Centroid. Indicates where the "center of mass" of the spectrum is located (perceived brightness of a sound).
+- **spec_bandwidth_mean**: Spectral Bandwidth. Describes the width of the frequency band of the audio signal.
+- **spec_contrast_mean**: Spectral Contrast. Considers the spectral peak, spectral valley, and their difference in each frequency subband.
+- **spec_flatness_mean**: Spectral Flatness. Measures how noise-like a sound is, as opposed to being tone-like.
+- **spec_rolloff_mean**: Spectral Rolloff. The frequency below which a specified percentage of the total spectral energy lies.
+- **freq_* (mean, std, maxv, minv, median, skew, kurt, q1, q3, mode, iqr)**: Descriptive statistical metrics calculated over the frequency distribution of the audio signal.
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+## 6. Machine Learning Models
+___________________________
+
+In our classification pipeline (`Redes_neuronales.py`), we implement and compare several distinct algorithms to identify whether an audio file is human (`bonafide`) or AI-generated (`spoof`), based on the extracted tabular features.
+
+- **Random Forest**: An ensemble of decision trees trained in parallel. **Why we use it**: It serves as a highly robust baseline that is resistant to overfitting and works exceptionally well out-of-the-box with tabular audio features.
+- **Gradient Boosting**: A sequential ensemble method that corrects errors from previous trees. **Why we use it**: It typically achieves higher predictive accuracy than Random Forest by building complex, fine-tuned decision boundaries, making it ideal for detecting subtle AI spoofing artifacts.
+- **Support Vector Machine (SVM)**: A classifier that finds the optimal hyperplane separating the classes. **Why we use it**: Highly effective in high-dimensional feature spaces. Using different kernels (like Linear or RBF) allows it to capture both simple and complex non-linear relationships in the audio metrics.
+- **Multi-Layer Perceptron (MLP)**: A foundational Deep Learning approach (feedforward neural network). **Why we use it**: It learns deep, hierarchical representations from the scaled data. It is highly flexible and capable of modeling highly complex, latent patterns that traditional tree or distance-based algorithms might miss.
+
+By comparing these models, we can determine the optimal balance between training speed, interpretability, and classification accuracy for audio deepfake detection.
