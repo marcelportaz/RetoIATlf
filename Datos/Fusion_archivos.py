@@ -27,3 +27,17 @@ df_fusionado.drop(columns=['File_Name'], inplace=True)
 # Guardar el DataFrame fusionado en un nuevo CSV
 df_fusionado.to_csv('./Datos/df_voices_eval.csv', index=False)
 print("¡Fusión completada! El archivo 'df_voices_eval.csv' ha sido creado con éxito.")
+
+# ==========================================
+# Fusion df_voice_train y df_voice_eval
+# ==========================================
+df1 = pd.read_csv('./Datos/df_voices_train.csv')
+df2 = pd.read_csv('./Datos/df_voices_eval.csv')
+
+df_generico = pd.concat([df1, df2], ignore_index=True)
+
+#get_dummies para la columna Gender
+df_generico = pd.get_dummies(df_generico, columns=['Gender'])
+
+# Guardar el resultado en un nuevo CSV
+df_generico.to_csv('./Datos/df_general.csv', index=False)
