@@ -8,18 +8,27 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
+from imblearn.under_sampling import RandomUnderSampler
 
 # 1. Cargar y preparar datos
 print("--- CARGANDO Y PREPARANDO DATOS ---")
-df = pd.read_csv('mis_features_audio.csv')
-
+df_train = pd.read_csv('./Datos/df_voices_train.csv')
+df_eval = pd.read_csv('./Datos/df_voices_eval.csv')
 # Crear variable objetivo (y)
-df['y'] = df['Key'].map({'bonafide': 0, 'spoof': 1})
+df_train['y'] = df_train['Key'].map({'bonafide': 0, 'spoof': 1})
+df_eval['y'] = df_eval['Key'].map({'bonafide': 0, 'spoof': 1})
+
+# Pasar variables categóricas a numéricas
+df_train = pd.get_dummies(df_train, columns='Gender', drop_first=True)
+df_eval = pd.get_dummies(df_eval, columns='Gender', drop_first=True)
 
 # Separar características (X) y objetivo (y)
 drop_columns = ['Key', 'file_name', 'User_ID', 'Spoofing_ID', 'y']
-X = df.drop(columns=drop_columns, errors='ignore')
-y = df['y']
+X = df_train.drop(columns=drop_columns, errors='ignore')
+y = df_train['y']
+
+X_eval = df_eval.drop(columns=drop_columns, errors='ignore')
+y_eval = df_eval['y']
 
 # Escalar los datos (importante para todos los modelos, vital para Redes Neuronales)
 scaler = StandardScaler()
@@ -30,7 +39,22 @@ X_train, X_test, y_train, y_test = train_test_split(
     X_scaled, y, test_size=0.2, random_state=42, stratify=y
 )
 
-print(f"Entrenamiento: {X_train.shape[0]} muestras. Test: {X_test.shape[0]} muestras.\n")
+# ==========================================
+# UNDERSAMPLING (solo en training)
+# ==========================================
+print("--- APLICANDO UNDERSAMPLING ---")
+
+rus = RandomUnderSampler(random_state=42)
+X_train_res, y_train_res = rus.fit_resample(X_train, y_train)
+
+print("Distribución original:")
+print(y_train_res.value_counts())
+
+print("\nDistribución después de undersampling:")
+print(pd.Series(y_train_res).value_counts())
+
+
+print(f"Entrenamiento: {X_train_res.shape[0]} muestras. Test: {X_test.shape[0]} muestras.\n")
 
 # Diccionario para guardar predicciones y comparar luego
 predictions = {}
@@ -42,11 +66,11 @@ print("--- ENTRENANDO RANDOM FOREST ---")
 for n_trees in [50, 100]:
     print(f"  -> Entrenando Random Forest con {n_trees} árboles...")
     rf_model = RandomForestClassifier(
-                                     n_estimators=n_trees,  # Número de árboles a utilizar. 
-                                     random_state=42,   # Valor constante para asegurar resultados repetibles
-                                     n_jobs=-1          # Número de núcleos de CPU a utilizar
-                                     )
-    rf_model.fit(X_train, y_train)
+        n_estimators=n_trees,  # Número de árboles a utilizar. 
+        random_state=42,   # Valor constante para asegurar resultados repetibles
+        n_jobs=-1          # Número de núcleos de CPU a utilizar
+    )
+    rf_model.fit(X_train_res, y_train_res)
     predictions[f'Random Forest ({n_trees} árboles)'] = rf_model.predict(X_test)
 
 # ==========================================
@@ -56,10 +80,10 @@ print("--- ENTRENANDO GRADIENT BOOSTING ---")
 for n_trees in [50, 100]:
     print(f"  -> Entrenando Gradient Boosting con {n_trees} árboles...")
     gb_model = GradientBoostingClassifier(
-                                        n_estimators=n_trees, 
-                                        random_state=42
-                                        )
-    gb_model.fit(X_train, y_train)
+        n_estimators=n_trees, 
+        random_state=42
+    )
+    gb_model.fit(X_train_res, y_train_res)
     predictions[f'Gradient Boosting ({n_trees} árboles)'] = gb_model.predict(X_test)
 
 # ==========================================
@@ -70,7 +94,7 @@ print("--- ENTRENANDO SUPPORT VECTOR MACHINE (SVM) ---")
 for kernel in ['linear', 'rbf']:
     print(f"  -> Entrenando SVM con kernel '{kernel}'...")
     svm_model = SVC(kernel=kernel, random_state=42)
-    svm_model.fit(X_train, y_train)
+    svm_model.fit(X_train_res, y_train_res)
     predictions[f'SVM ({kernel} kernel)'] = svm_model.predict(X_test)
 
 
@@ -79,7 +103,7 @@ for kernel in ['linear', 'rbf']:
 # ==========================================
 print("--- ENTRENANDO RED NEURONAL (MLP) ---")
 mlp_model = Sequential([
-    Dense(128, activation='relu', input_shape=(X_train.shape[1],)),
+    Dense(128, activation='relu', input_shape=(X_train_res.shape[1],)),
     Dropout(0.4),
     Dense(64, activation='relu'),
     Dropout(0.3),
@@ -93,7 +117,7 @@ early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=
 
 # Entrenar en modo silencioso (verbose=0) para no saturar la consola
 mlp_model.fit(
-    X_train, y_train,
+    X_train_res, y_train_res,
     epochs=50,
     batch_size=32,
     validation_split=0.2,
