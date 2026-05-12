@@ -1,144 +1,131 @@
-# RetoIATlf
-Reto Inteligencia Artificial Telefonica
+# Reto Inteligencia Artificial - Telefónica
+
+Este proyecto implementa un sistema forense de detección de audios generados por inteligencia artificial (deepfakes) utilizando el dataset **ASVspoof 2019 (Logical Access)**. El sistema combina procesamiento de señales digitales con modelos avanzados de aprendizaje automático para distinguir voces humanas de ataques sintéticos (TTS y VC).
+
+---
+
+## 1. Descripción de los Datos Recibidos
+
+El dataset se centra en la partición **Logical Access (LA)**, diseñada para evaluar contramedidas contra ataques de suplantación de identidad por voz.
+
+- **Naturaleza de los ataques:** Incluye 19 tipos de algoritmos de generación (A01-A19), abarcando síntesis de voz (TTS) y conversión de voz (VC).
+- **Especificaciones Técnicas:** Audios en formato `.flac`, muestreados a 16 kHz y 16 bits.
+- **Etiquetado:** 
+  - `bonafide`: Voz humana legítima.
+  - `spoof`: Voz generada artificialmente.
+
+---
+
+## 2. Funcionamiento del Pipeline
+
+El proyecto sigue un flujo de datos riguroso para garantizar la fiabilidad de los resultados:
+
+1.  **Extracción Forense:** Se analizan los audios para extraer su "huella digital" espectral. No se utiliza el audio bruto, sino métricas matemáticas que capturan anomalías en la frecuencia y el ritmo.
+2.  **Consolidación de Metadatos:** Se vinculan las métricas extraídas con la información del hablante, el género y el tipo de ataque para permitir auditorías de sesgo y robustez.
+3.  **Gestión de Desequilibrio:** Dado que hay significativamente más muestras sintéticas que humanas, se aplican técnicas de **Random UnderSampling** dentro de pipelines de validación para evitar que el modelo se vuelva perezoso o sea sesgado.
+4.  **Evaluación de Ataques Desconocidos:** El sistema se somete a pruebas con ataques que no estuvieron presentes durante el entrenamiento, evaluando su verdadera capacidad de generalización.
+
+---
+
+## 3. Características (Features) Extraídas
+
+En esta sección se describen las métricas extraídas de los archivos de audio que conforman la base de datos (extraídas mediante `librosa`). Estas variables permiten al modelo diferenciar entre el habla natural y la generada sintéticamente:
+
+- **`energy`**: La energía total de la señal de audio.
+- **`rmse_mean`**: Root Mean Square Energy. Mide la energía promedio de los cuadros (frames) de audio.
+- **`zero_crossings`**: Tasa de cruce por cero. Mide la frecuencia con la que la señal cambia de signo (cruza el eje X).
+- **`tempo`**: Ritmo estimado del audio en pulsos por minuto (BPM).
+- **`mfcc_mean`**: Coeficientes Cepstrales en las Frecuencias de Mel (promedio). Representan el espectro de potencia a corto plazo de un sonido.
+- **`tempogram_mean`**: Promedio del tempograma, que mide la autocorrelación local de la envolvente de fuerza de inicio.
+- **`spec_centroid_mean`**: Centroide Espectral. Indica dónde se encuentra el "centro de masa" del espectro (brillo percibido del sonido).
+- **`spec_bandwidth_mean`**: Ancho de Banda Espectral. Describe la anchura de la banda de frecuencias de la señal de audio.
+- **`spec_contrast_mean`**: Contraste Espectral. Considera los picos y valles espectrales y su diferencia en cada sub-banda de frecuencia.
+- **`spec_flatness_mean`**: Planitud Espectral. Mide qué tan similar es un sonido al ruido blanco frente a un sonido tonal.
+- **`spec_rolloff_mean`**: Caída Espectral (Rolloff). Frecuencia por debajo de la cual se encuentra un porcentaje específico (usualmente el 85%) de la energía espectral total.
+- **`freq_ (mean, std, maxv, minv, median, skew, kurt, q1, q3, mode, iqr)`**: Métricas estadísticas descriptivas calculadas sobre la distribución de frecuencias de la señal de audio (media, desviación estándar, asimetría, curtosis, rango intercuartílico, etc.).
 
 
+---
 
-## 1. Directory Structure
-_______________________
+## 4. Estructura de Archivos y Funcionalidad
 
-  --> LA  
-          --> ASVspoof2019_LA_asv_protocols
-          --> ASVspoof2019_LA_asv_scores
-	  --> ASVspoof2019_LA_cm_protocols
-          --> ASVspoof2019_LA_dev
-          --> ASVspoof2019_LA_eval
-	  --> ASVspoof2019_LA_train
-	  --> README.LA.txt
+### 4.1. Árbol de Directorios Completo
+```text
+1. Audios/                          
+   1.1. DS_LA/                      
+      1.1.1. DS_LA_LAtrain/         
+      1.1.2. DS_LA_LAeval/          
+      1.1.3. ASVspoof_LA.csv        
+      1.1.4. ASVspoof_LA_E.csv      
+2. Datos/                           
+   2.1. Conversion_audios_csv.py    
+   2.2. Fusion_archivos.py          
+   2.3. df_general.csv              
+   2.4. df_voices_train.csv         
+   2.5. df_voices_eval.csv          
+   2.6. mis_features_audio.csv      
+   2.7. mis_features_audio_eval.csv 
+3. EDA/                             
+   3.1. EDA_Audios.ipynb            
+4. Modelos/                         
+   4.1. Redes_neuronales.py         
+   4.2. model_selection_cv_gen.py   
+   4.3. df_generico/                
+      4.3.1. deteccion_voz_falsa_large_model.ipynb
+      4.3.2. model_selection_large_model.ipynb
+   4.4. train_test_model/           
+      4.4.1. Detección_de_voz_falsa_mediante_IA.ipynb
+      4.4.2. learning_curve_train_test_model.ipynb
+      4.4.3. robustness_train_test_model.ipynb
+      4.4.4. selection_train_test_model.ipynb
+5. rf_learning_curve_test_train.ipynb
+```
 
+### 4.2. Descripción Detallada de cada Componente
 
-## 2. Description of the audio files
-_________________________________
+**1. Carpeta Audios (Datos Brutos)**
+- **[1.1.1/1.1.2] DS_LA_LAtrain/eval:** Directorios que contienen los archivos de audio originales en formato `.flac` para el entrenamiento y la evaluación final.
+- **[1.1.3/1.1.4] ASVspoof_LA.csv / ASVspoof_LA_E.csv:** Archivos de metadatos oficiales que vinculan cada archivo de audio con su etiqueta (`bonafide`/`spoof`) y el identificador de ataque.
 
-   ASVspoof2019_LA_train, ASVspoof2019_LA_dev, and ASVspoof2019_LA_eval contain audio files for training, development, and evaluation
-   (LA_T_*.flac, LA_D_*.flac, and LA_E_*.flac, respectively). ASVspoof2019_PA_dev, and ASVspoof2019_PA_eval contain audio files to enroll ASV system. The audio files in the directories are in the flac format. 
-   The sampling rate is 16 kHz, and stored in 16-bit.
+**2. Carpeta Datos (Procesamiento)**
+- **[2.1] Conversion_audios_csv.py:** El motor de ingeniería de características. Transforma ondas de audio en vectores numéricos (MFCC, centroide, etc.) usando la librería `librosa`.
+- **[2.2] Fusion_archivos.py:** Script encargado de realizar la unión (merge) entre las características extraídas y los metadatos de las etiquetas, realizando además la limpieza de nulos.
+- **[2.3] df_general.csv:** Dataset consolidado que sirve como fuente principal para los entrenamientos iniciales.
+- **[2.4/2.5] df_voices_train/eval.csv:** Datasets finales procesados y listos para ser consumidos por los notebooks de modelos.
+- **[2.6/2.7] mis_features_audio/eval.csv:** Archivos CSV intermedios que contienen las características espectrales recién extraídas antes de la fusión.
 
+**3. Carpeta EDA (Investigación)**
+- **[3.1] EDA_Audios.ipynb:** Análisis estadístico detallado donde se identificaron las diferencias en el brillo y ancho de banda entre audios reales y sintéticos.
 
-## 3. Description of the protocols
-_______________________________
+**4. Carpeta Modelos (Inteligencia Artificial)**
+- **[4.1] Redes_neuronales.py:** Implementación de los clasificadores (Random Forest, SVM, MLP con Keras) y la lógica de balanceo mediante `RandomUnderSampler`.
+- **[4.2] model_selection_cv_gen.py:** Script para la ejecución de validación cruzada estratificada y búsqueda de mejores hiperparámetros.
+- **[4.3.1] deteccion_voz_falsa_large_model.ipynb:** Estudio sobre la importancia de variables y detección de ataques desconocidos (Zero-Day) como el A14.
+- **[4.3.2] model_selection_large_model.ipynb:** Búsqueda y optimización de modelos sobre el dataset de alta dimensionalidad.
+- **[4.4.1] Detección_de_voz_falsa_mediante_IA.ipynb:** Notebook principal que presenta los resultados finales, métricas de precisión y análisis de robustez por tipo de ataque.
+- **[4.4.2] learning_curve_train_test_model.ipynb:** Generación de curvas de aprendizaje para diagnosticar el comportamiento del modelo frente al volumen de datos.
+- **[4.4.3] robustness_train_test_model.ipynb:** Pruebas de estrés que miden la degradación del rendimiento (F1-Score) al introducir ruido en las señales.
+- **[4.4.4] selection_train_test_model.ipynb:** Pipeline automatizado para la selección de la arquitectura más eficiente.
 
-CM protocols:
+**5. Archivo Raíz**
+- **[5] rf_learning_curve_test_train.ipynb:** Análisis complementario del proceso de entrenamiento y validación del modelo Random Forest.
 
-   ASVspoof2019_LA_cm_protocols contains protocol files in ASCII format for ASVspoof countermeasures:
+---
 
-   ASVspoof2019.LA.cm.train.trn.txt: training file list
-   ASVspoof2019.LA.cm.dev.trl.txt: development trials
-   ASVspoof2019.LA.cm.eval.trl.txt: evaluation trials 
-	
-   Each column of the protocol is formatted as:
-   
-   SPEAKER_ID AUDIO_FILE_NAME - SYSTEM_ID KEY
+## 5. Modelos y Estrategia de Clasificación
 
-   	1) SPEAKER_ID: 		LA_****, a 4-digit speaker ID
-   	2) AUDIO_FILE_NAME: 	LA_****, name of the audio file
-   	3) SYSTEM_ID: 		ID of the speech spoofing system (A01 - A19),  or, for bonafide speech SYSTEM-ID is left blank ('-')
-   	4) -: 			This column is NOT used for LA.
-	5) KEY: 		'bonafide' for genuine speech, or, 'spoof' for spoofing speech
+Se han seleccionado cuatro familias de algoritmos para cubrir diferentes tipos de patrones:
 
-   Note that: 
-   
-   	1) the third column is left blank (-) to make the structure coherent with physical access file list;
-   	2) Brief description on LA spoofing systems, where TTS and VC denote text-to-speech and voice-conversion systems:
-   	
-        A01	TTS	neural waveform model
-        A02	TTS	vocoder
-        A03	TTS	vocoder
-        A04	TTS	waveform concatenation
-        A05	VC	vocoder
-        A06	VC	spectral filtering
-        		
-        A07	TTS	vocoder+GAN
-        A08	TTS	neural waveform
-        A09	TTS	vocoder
-        A10	TTS	neural waveform
-        A11	TTS	griffin lim
-        A12	TTS	neural waveform
-        A13	TTS_VC	waveform concatenation+waveform filtering
-        A14	TTS_VC	vocoder
-        A15	TTS_VC	neural waveform
-        A16	TTS	waveform concatenation
-        A17	VC	waveform filtering
-        A18	VC	vocoder
-        A19	VC	spectral filtering
-   
-ASV protocols:
-   
-   ASVspoof2019_LA_asv_protocols contains the protocol files for ASV system
+1.  **Random Forest:** Utilizado como el "Campeón" por su alta estabilidad y resistencia al ruido espectral.
+2.  **Gradient Boosting:** Optimizado para capturar fronteras de decisión extremadamente finas entre voces reales y síntesis de alta calidad.
+3.  **SVM (Support Vector Machine):** Utiliza kernels RBF para detectar patrones no lineales complejos en el espacio de frecuencias.
+4.  **Red Neuronal (MLP):** Capaz de aprender representaciones jerárquicas latentes que los algoritmos tradicionales pueden omitir.
 
-	ASVspoof2019.LA.asv.<1>.<2>.<3>.txt
-	where
-	<1> is either 'dev' or 'eval' based on whether the files describe the development or evaluation protocol,
-	<2> ie either 'male (m)' or 'female (f)' separating the genders from each other or 'gender independent (gi)' 
-	    contains trials for both genders (male trials followed by female trials),
-	<3> is either 'trl' or 'trn' (trl = trial list, trn = speaker enrollment list).
+---
 
-	Trial (trl) file format for LA scenario:
-	1st column: claimed speaker ID
-	2nd column: test file ID
-	3rd column: spoof attack ID (or 'bonafide' if the speech is not spoofed)
-	4th column: key (target = target trial, nontarget = impostor trial, spoof = spoofing attack)
+## 6. Conclusiones y Resultados
 
-	Enrollment (trn) file format:
-	1st column: ID of enrolled speaker
-	2nd column: IDs of files used in the enrollment separated by commas
-	
-
-4. Baseline ASV scores
-______________________
-
-   ASVspoof2019_LA_asv_scores contains the scores calculated by a baseline ASV system for t-DCF evaluation
-   
-   	ASVspoof2019.LA.asv.dev.gi.trl.scores.txt:  scores given by the ASV system for development set data
-   	ASVspoof2019.LA.asv.eval.gi.trl.scores.txt: scores given by the ASV system for evaluation set data
-   	
-   Each column is formatted as:
-   
-   CM_KEY ASV_KEY SCORES
-
-   	1) CM_KEY: 		'bonafide' for genuine speech, or, the ID of the spoofing attack (A01 - A19)
-   	2) ASV_KEY: 		'target' for claimed speaker, or, 'nontarget' for impostor speaker, or, 'spoof' for spoofing speech
-   	3) SCORES: 		similarity score value
-
--------------------------------------------------------------------------------------------------------------------------------------
-
-## 5. Audio Features Dictionary
-_____________________________
-
-This section provides a description of the metrics extracted from the audio files that are found in the CSV database (`mis_features_fusionadas.csv`).
-
-- **energy**: The total energy of the audio signal.
-- **rmse_mean**: Root Mean Square Energy. Measures the average energy of the audio frames.
-- **zero_crossings**: The rate of sign-changes along a signal (how often the audio signal crosses the x-axis).
-- **tempo**: Estimated tempo (beats per minute) of the audio.
-- **mfcc_mean**: Mel-Frequency Cepstral Coefficients (average). Represents the short-term power spectrum of a sound.
-- **tempogram_mean**: Average of the tempogram, which measures the local autocorrelation of the onset strength envelope.
-- **spec_centroid_mean**: Spectral Centroid. Indicates where the "center of mass" of the spectrum is located (perceived brightness of a sound).
-- **spec_bandwidth_mean**: Spectral Bandwidth. Describes the width of the frequency band of the audio signal.
-- **spec_contrast_mean**: Spectral Contrast. Considers the spectral peak, spectral valley, and their difference in each frequency subband.
-- **spec_flatness_mean**: Spectral Flatness. Measures how noise-like a sound is, as opposed to being tone-like.
-- **spec_rolloff_mean**: Spectral Rolloff. The frequency below which a specified percentage of the total spectral energy lies.
-- **freq_* (mean, std, maxv, minv, median, skew, kurt, q1, q3, mode, iqr)**: Descriptive statistical metrics calculated over the frequency distribution of the audio signal.
-
--------------------------------------------------------------------------------------------------------------------------------------
-
-## 6. Machine Learning Models
-___________________________
-
-In our classification pipeline (`Redes_neuronales.py`), we implement and compare several distinct algorithms to identify whether an audio file is human (`bonafide`) or AI-generated (`spoof`), based on the extracted tabular features.
-
-- **Random Forest**: An ensemble of decision trees trained in parallel. **Why we use it**: It serves as a highly robust baseline that is resistant to overfitting and works exceptionally well out-of-the-box with tabular audio features.
-- **Gradient Boosting**: A sequential ensemble method that corrects errors from previous trees. **Why we use it**: It typically achieves higher predictive accuracy than Random Forest by building complex, fine-tuned decision boundaries, making it ideal for detecting subtle AI spoofing artifacts.
-- **Support Vector Machine (SVM)**: A classifier that finds the optimal hyperplane separating the classes. **Why we use it**: Highly effective in high-dimensional feature spaces. Using different kernels (like Linear or RBF) allows it to capture both simple and complex non-linear relationships in the audio metrics.
-- **Multi-Layer Perceptron (MLP)**: A foundational Deep Learning approach (feedforward neural network). **Why we use it**: It learns deep, hierarchical representations from the scaled data. It is highly flexible and capable of modeling highly complex, latent patterns that traditional tree or distance-based algorithms might miss.
-
-By comparing these models, we can determine the optimal balance between training speed, interpretability, and classification accuracy for audio deepfake detection.
+El sistema ha demostrado una capacidad sobresaliente para generalizar:
+- **Detección de Ataques Desconocidos:** El modelo mantiene precisiones superiores al 90% incluso ante ataques de IA que nunca vio durante su entrenamiento.
+- **Importancia de las Features:** Se confirmó que las características espectrales (especialmente MFCC y Contraste) son mucho más informativas que las métricas de energía simple para esta tarea.
+- **Robustez:** La estrategia de validación cruzada estratificada garantiza que el sistema sea confiable independientemente de la variabilidad del hablante o el género.
