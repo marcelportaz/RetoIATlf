@@ -58,15 +58,15 @@ En esta sección se describen las métricas extraídas de los archivos de audio 
       1.1.3. ASVspoof_LA.csv        
       1.1.4. ASVspoof_LA_E.csv      
 2. Datos/                           
-   2.1. Conversion_audios_csv.py    
-   2.2. Fusion_archivos.py          
+   2.1. 1.conversion_to_data.py    
+   2.2. 2.fusion.py          
    2.3. df_general.csv              
    2.4. df_voices_train.csv         
    2.5. df_voices_eval.csv          
    2.6. mis_features_audio.csv      
    2.7. mis_features_audio_eval.csv 
 3. EDA/                             
-   3.1. EDA_Audios.ipynb            
+   3.1. eda.ipynb            
 4. Modelos/                         
    4.1. Redes_neuronales.py         
    4.2. model_selection_cv_gen.py   
