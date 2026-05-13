@@ -118,8 +118,7 @@ Se han seleccionado cuatro familias de algoritmos para cubrir diferentes tipos d
 
 1.  **Random Forest:** Utilizado como el "Campeón" por su alta estabilidad y resistencia al ruido espectral.
 2.  **Gradient Boosting:** Optimizado para capturar fronteras de decisión extremadamente finas entre voces reales y síntesis de alta calidad.
-3.  **SVM (Support Vector Machine):** Utiliza kernels RBF para detectar patrones no lineales complejos en el espacio de frecuencias.
-4.  **Red Neuronal (MLP):** Capaz de aprender representaciones jerárquicas latentes que los algoritmos tradicionales pueden omitir.
+3.  **SVM (Support Vector Machine):** Utiliza kernels RBF para detectar patrones no lineales complejos en el espacio de frecuencias. (kernels lineal y RBF)
 
 ---
 
@@ -129,3 +128,76 @@ El sistema ha demostrado una capacidad sobresaliente para generalizar:
 - **Detección de Ataques Desconocidos:** El modelo mantiene precisiones superiores al 90% incluso ante ataques de IA que nunca vio durante su entrenamiento.
 - **Importancia de las Features:** Se confirmó que las características espectrales (especialmente MFCC y Contraste) son mucho más informativas que las métricas de energía simple para esta tarea.
 - **Robustez:** La estrategia de validación cruzada estratificada garantiza que el sistema sea confiable independientemente de la variabilidad del hablante o el género.
+
+
+
+
+
+
+
+---
+
+
+Planteamiento de problema
+1 a 4 ISA
+
+
+
+Metodologia (Marcel)
+5 - Extraccion, dimensiones
+6 - ETL (3 dataset y se fusionan etc)
+7 - Slide skip definiciones de las features
+
+
+
+EDA (5 minutos)
+8 - desbalanceo (no poner grafico)
+9 - grafico de Análisis de Características: Humanos vs IA - Diferenciación en medias de algunas features
+10 - Algo de pipe y medidas de performance
+11 - Porque probamos cada modelo UWU y que se escogio - Colinealidad entre algunas variables que hacían pensar que RF podía ser el mejor modelo (porque gestiona nativamente la relación entre variables)
+
+
+Prueba de robustes
+12 en adelante
+
+
+
+Aquí tienes las tres fórmulas de las medidas de tendencia central (o promedios) más comunes: la **Aritmética**, la **Geométrica** y la **Armónica**.
+
+Para estos ejemplos, asumimos un conjunto de $n$ números: $\{x_1, x_2, \dots, x_n\}$.
+
+---
+
+### 1. Media Aritmética ($\bar{x}$)
+
+Es el promedio estándar que todos conocemos. Se obtiene sumando todos los valores y dividiendo entre el número total de datos. Es ideal para datos con distribución uniforme.
+
+$$\bar{x} = \frac{\sum_{i=1}^{n} x_i}{n} = \frac{x_1 + x_2 + \dots + x_n}{n}$$
+
+---
+
+### 2. Media Geométrica ($G$)
+
+Se utiliza principalmente para calcular tasas de crecimiento porcentual o intereses compuestos. En lugar de sumar, los valores se multiplican.
+
+$$G = \sqrt[n]{\prod_{i=1}^{n} x_i} = \sqrt[n]{x_1 \cdot x_2 \cdot \dots \cdot x_n}$$
+
+---
+
+### 3. Media Armónica ($H$)
+
+Como vimos antes, es el recíproco del promedio de los recíprocos. Es la mejor para promediar velocidades, densidades o razones.
+
+$$H = \frac{n}{\sum_{i=1}^{n} \frac{1}{x_i}} = \frac{n}{\frac{1}{x_1} + \frac{1}{x_2} + \dots + \frac{1}{x_n}}$$
+
+---
+
+### Comparativa Rápida
+
+| Medida | Operación principal | Uso común |
+| --- | --- | --- |
+| **Aritmética** | Suma | Notas escolares, salarios, temperaturas. |
+| **Geométrica** | Multiplicación | Crecimiento de inversiones, poblaciones. |
+| **Armónica** | Inversión (Recíprocos) | Velocidad media, razones financieras. |
+
+Un dato curioso es la **Desigualdad de las Medias**: para cualquier grupo de números positivos, la relación siempre será $H \leq G \leq \bar{x}$.
